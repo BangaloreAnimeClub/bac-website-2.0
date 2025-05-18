@@ -63,7 +63,15 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
           <h1 className="inline-block font-black text-4xl lg:text-5xl">Blog</h1>
         </div>
       </div>
-      <div className="grid grid-cols-12 gap-3 mt-8">
+      {search && displayPosts.length > 0 && (
+        <div className="mb-4 mt-6 text-muted-foreground text-base">
+          <i>
+            Showing results for
+            "{searchParams?.search}"
+          </i>
+        </div>
+      )}
+      <div className="grid grid-cols-12 gap-3 mt-4">
         <div className="col-span-12 col-start-1 sm:col-span-8">
           <hr />
           {displayPosts?.length > 0 ? (
