@@ -18,15 +18,25 @@ function getFrontmatter(content) {
 }
 
 function getHeaders(content) {
-  // Match #, ##, ###, or <div> with # or ## inside
   const headers = [];
-  const regex = /^(#+)\s*(.*)|<div[^>]*>\s*#*\s*\*\*?([^<\n*]+)\*\*?/gim;
+  // 1. Match Markdown headers (e.g., #, ##, ###) anywhere in the line, even inside HTML tags
+  const mdHeaderAnywhereRegex = /#\s*([\w\s'"\-:×#0-9!.,&()]+)(?=\n|$)/gim;
   let match;
-  while ((match = regex.exec(content))) {
-    if (match[2]) headers.push(match[2].replace(/\*\*/g, '').trim());
-    else if (match[3]) headers.push(match[3].replace(/\*\*/g, '').trim());
+  while ((match = mdHeaderAnywhereRegex.exec(content))) {
+    if (match[1]) headers.push(match[1].replace(/\*\*|_/g, '').replace(/<[^>]+>/g, '').trim());
   }
-  return headers;
+  // 2. Match HTML headers <h1>, <h2>, <h3>, etc.
+  const htmlHeaderRegex = /<h[1-6][^>]*>(.*?)<\/h[1-6]>/gim;
+  while ((match = htmlHeaderRegex.exec(content))) {
+    if (match[1]) headers.push(match[1].replace(/<[^>]+>/g, '').replace(/\*\*|_/g, '').trim());
+  }
+  // 3. Match <div> with Markdown header inside (e.g., <div> # **Header** </div>)
+  const divHeaderRegex = /<div[^>]*>[^#]*#\s*([\w\s'"\-:×#0-9!.,&()]+).*?<\/div>/gims;
+  while ((match = divHeaderRegex.exec(content))) {
+    if (match[1]) headers.push(match[1].replace(/\*\*|_/g, '').replace(/<[^>]+>/g, '').trim());
+  }
+  // Remove duplicates and empty
+  return [...new Set(headers.filter(Boolean))];
 }
 
 function getAllMdxFiles(dir) {
@@ -56,6 +66,7 @@ function main() {
     const headers = getHeaders(content);
     return {
       title: fm.title || path.basename(filePath),
+      description: fm.description || "",
       slug: slugFromFilePath(filePath),
       headers: headers.slice(0, 5),
     };

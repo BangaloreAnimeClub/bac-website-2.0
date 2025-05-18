@@ -33,10 +33,13 @@ export default async function BlogPage({ searchParams }: BlogPageProps) {
     const matchingSlugs = blogSearchIndex
       .filter((b) => {
         const title = b.title.toLowerCase();
+        const description = (b.description || "").toLowerCase();
         const headers = b.headers.map((h) => h.toLowerCase());
-        // Check if every search word is in title or any header
+        // Check if every search word is in title, description, or any header
         return searchWords.every(word =>
-          title.includes(word) || headers.some(h => h.includes(word))
+          title.includes(word) ||
+          // description.includes(word) || // don't include description words
+          headers.some(h => h.includes(word))
         );
       })
       .map((b) => b.slug);
