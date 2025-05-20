@@ -10,6 +10,7 @@ import { sortPosts } from "@/lib/utils";
 import { CommentSection } from "@/components/comment-section";
 import { fetchBlogPostBySlugWithEntries, fetchBlogPosts as fetchContentfulPosts } from "@/lib/contentful";
 import { documentToReactComponents } from "@contentful/rich-text-react-renderer";
+import { extractFirstImageUrl } from '@/lib/extractFirstImageUrl';
 
 interface PostPageProps {
   params: {
@@ -107,12 +108,45 @@ export async function generateMetadata({
     return {};
   }
 
+  // Extract first image from MDX or Contentful
+  let imageUrl: string | null = null;
+  if (post.source === 'contentful') {
+    // Try spotlightEntries first
+    if (post.spotlightEntries && post.spotlightEntries.length > 0) {
+      for (const entry of post.spotlightEntries) {
+        imageUrl = extractFirstImageUrl({ contentful: entry.content });
+        if (imageUrl) break;
+      }
+    }
+    // Fallback to main body
+    if (!imageUrl) {
+      imageUrl = extractFirstImageUrl({ contentful: post.body });
+    }
+  } else {
+    imageUrl = extractFirstImageUrl({ mdx: String(post.body) });
+  }
+  // Fallback to site preview image
+  if (!imageUrl) imageUrl = siteConfig.preview_image;
+
   const ogSearchParams = new URLSearchParams();
-  ogSearchParams.set("title", post.title);
+  ogSearchParams.set('title', post.title);
 
   return {
     title: post.title,
     description: post.description,
+    openGraph: {
+      title: post.title,
+      description: post.description,
+      url: siteConfig.url + '/blog/' + post.slug,
+      images: [imageUrl],
+      type: 'article',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: post.title,
+      description: post.description,
+      images: [imageUrl],
+    },
   };
 }
 
