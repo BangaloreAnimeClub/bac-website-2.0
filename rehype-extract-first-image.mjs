@@ -1,4 +1,4 @@
-\
+
 import { visit } from "unist-util-visit";
 
 export default function rehypeExtractFirstImage() {
