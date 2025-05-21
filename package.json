@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "pnpm velite && next build",
     "start": "next start",
     "lint": "next lint",
     "prebuild": "node scripts/generate-blog-search-index.js"
