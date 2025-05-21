@@ -21,7 +21,10 @@ async function getPostFromParams(params: PostPageProps["params"]) {
   const slug = params?.slug?.join("/");
   let post = posts.find((post) => post.slugAsParams === slug);
 
-  if (post) return { ...post, source: "local" };
+  if (post) {
+    // Ensure firstImageUrl is passed along for local posts
+    return { ...post, source: "local", firstImageUrl: post.firstImageUrl };
+  }
 
   // Try Contentful if not found locally
   const entry = await fetchBlogPostBySlugWithEntries(slug);
@@ -110,9 +113,29 @@ export async function generateMetadata({
   const ogSearchParams = new URLSearchParams();
   ogSearchParams.set("title", post.title);
 
+  // Use firstImageUrl if available (especially for local posts), otherwise fallback
+  const imageUrl = post.firstImageUrl || siteConfig.preview_image;
+
   return {
     title: post.title,
     description: post.description,
+    openGraph: {
+      title: post.title,
+      description: post.description,
+      type: "article",
+      url: `${siteConfig.url}/blog/${post.slugAsParams}`,
+      images: [
+        {
+          url: imageUrl,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: post.title,
+      description: post.description,
+      images: [imageUrl],
+    },
   };
 }
 

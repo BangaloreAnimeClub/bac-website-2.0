@@ -2,6 +2,7 @@ import { defineConfig, defineCollection, s } from "velite";
 import rehypeSlug from "rehype-slug";
 import rehypePrettyCode from "rehype-pretty-code";
 import rehypeAutolinkHeadings from "rehype-autolink-headings";
+import rehypeExtractFirstImage from "./rehype-extract-first-image.mjs"; // Import the new plugin
 
 const computedFields = <T extends { slug: string }>(data: T) => ({
   ...data,
@@ -19,6 +20,7 @@ const posts = defineCollection({
       date: s.isodate(),
       published: s.boolean().default(true),
       tags: s.array(s.string()).optional(),
+      firstImageUrl: s.string().optional(), // Add field for the first image URL
       body: s.mdx(),
     })
     .transform(computedFields),
@@ -80,6 +82,7 @@ export default defineConfig({
           },
         },
       ],
+      rehypeExtractFirstImage, // Add the plugin here
     ],
     remarkPlugins: [],
   },
