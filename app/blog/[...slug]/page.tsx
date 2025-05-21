@@ -154,11 +154,29 @@ export async function generateMetadata({
     return {};
   }
 
-  const ogSearchParams = new URLSearchParams();
-  ogSearchParams.set("title", post.title);
+  let determinedImageUrl = siteConfig.preview_image; // Default to site's main preview image
 
-  // Use firstImageUrl if available (especially for local posts), otherwise fallback
-  const imageUrl = post.firstImageUrl || siteConfig.preview_image;
+  if (post.firstImageUrl) {
+    const imagePath = post.firstImageUrl;
+    // Check if it's already an absolute URL
+    if (imagePath.startsWith('https://') || imagePath.startsWith('http://')) {
+      determinedImageUrl = imagePath;
+    } else {
+      // Assume it's a relative path that needs to be made absolute.
+      // Ideally, images in MDX should be referenced with root-relative paths (e.g., /images/my-image.png)
+      // which correspond to files in your `public` directory.
+      const siteUrl = siteConfig.url.endsWith('/') ? siteConfig.url.slice(0, -1) : siteConfig.url;
+      const relativePath = imagePath.startsWith('/') ? imagePath : `/${imagePath}`;
+      determinedImageUrl = `${siteUrl}${relativePath}`;
+    }
+  } else if (post.source === 'contentful') {
+    // Placeholder for Contentful-specific image extraction if needed in the future.
+    // For now, Contentful posts will use the default image if post.firstImageUrl is not set.
+    // If Contentful entries have a dedicated 'featuredImage' field, you could fetch and use its URL here.
+    // Example: if (post.contentfulFeaturedImageUrl) { determinedImageUrl = post.contentfulFeaturedImageUrl; }
+  }
+
+  // console.log(`Final OG Image for ${post.slugAsParams}: ${determinedImageUrl}`); // Optional: for debugging locally or in build logs
 
   return {
     title: post.title,
@@ -170,7 +188,7 @@ export async function generateMetadata({
       url: `${siteConfig.url}/blog/${post.slugAsParams}`,
       images: [
         {
-          url: imageUrl,
+          url: determinedImageUrl, // Ensure this is absolute
         },
       ],
     },
@@ -178,7 +196,7 @@ export async function generateMetadata({
       card: "summary_large_image",
       title: post.title,
       description: post.description,
-      images: [imageUrl],
+      images: [determinedImageUrl], // Ensure this is absolute
     },
   };
 }
